@@ -1,0 +1,12 @@
+>Chloroform water partition coefficients
+A -0.8
+T -0.4
+U -0.4
+C -3.0
+G -3.5
+>Free energy of solvation in water
+A 1.90
+T 1.50
+U 1.50
+C 1.00
+G 2.40

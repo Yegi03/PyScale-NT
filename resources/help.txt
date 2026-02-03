@@ -1,0 +1,98 @@
+
+-h          : Open this help menu
+────────────────────────────────────────────────────────────────────────────────
+-ao         : Activates all output override
+		 -Overrides periodicity, flip_read, and complement_strand
+		 -Produces outputs for every True/False combination of these
+		 -Can be incredibly slow
+────────────────────────────────────────────────────────────────────────────────
+-c          : Activates complementary strand production
+		 -Converts input data strand to complementary strand
+		 -Outputted data files will use this complementary strand
+────────────────────────────────────────────────────────────────────────────────
+-r	    : Activates flipped reversed nucleotide reading
+		 -Reverses order of input nucleotide sequence
+		 -Outputted data files will use the reversed sequence
+────────────────────────────────────────────────────────────────────────────────
+-f [path]   : Defines input file location
+		 -Should be followed with a valid file path to a folder
+		 -Data files will then be pulled from this folder
+────────────────────────────────────────────────────────────────────────────────
+-o [path]   : Defines output location
+		 -Should be followed with a valid file path to a folder
+		 -Data files will then be outputted to this folder
+────────────────────────────────────────────────────────────────────────────────
+-t [a/i/ai] : Defines the output type
+		 -Should be followed by either a, i, or ai as an argument
+		 -a outputs data files for an average across every inputted scale
+		 -i outputs data files for each individual scale
+		 -ai outputs data files for averaged and individual scales
+────────────────────────────────────────────────────────────────────────────────
+-p 	    : Activates periodicity assumption
+		 -Assumes sequence repeats and wraps averaging windows
+		 -Allows slightly more points to be plotted
+────────────────────────────────────────────────────────────────────────────────
+-s	    : Defines scale file location
+		 -Should be followed with a valid file path to a folder
+		 -Scale files will then be pulled from this folder
+────────────────────────────────────────────────────────────────────────────────
+-ss 	    : Defines the step size if window averaging is enabled
+		 -Defines the 'steps' between different window sizes sampled
+		 -Should be followed by an even integer value
+────────────────────────────────────────────────────────────────────────────────
+-wa 	    : Activates window averaging
+		 -Produces outputs for different averaging window sizes
+		 -Also produces an output file with averages across all sizes
+		 -Window sizes used will be the defined down to 3
+────────────────────────────────────────────────────────────────────────────────
+-ws	    : Defines the size of the averaging window
+		 -Should be followed by an odd integer value
+		 -Will be treated as the maximum if the -wa argument is present
+────────────────────────────────────────────────────────────────────────────────
+LYAPUNOV (ROSENSTEIN) OPTIONS:
+────────────────────────────────────────────────────────────────────────────────
+--lyap_m [int]      : Embedding dimension (default: 2)
+		      -Controls the dimension of the delay-embedded phase space
+		      -Higher values capture more complex dynamics
+────────────────────────────────────────────────────────────────────────────────
+--lyap_tau [int]    : Time delay for embedding (default: 1)
+		      -Delay between successive embedding coordinates
+────────────────────────────────────────────────────────────────────────────────
+--lyap_kmax [int]   : Maximum divergence steps (default: 30)
+		      -Number of time steps to track neighbor divergence
+────────────────────────────────────────────────────────────────────────────────
+--lyap_theiler [int]: Theiler window (default: 0 = auto = m*tau)
+		      -Minimum temporal separation for neighbor pairs
+		      -Excludes temporally correlated neighbors
+────────────────────────────────────────────────────────────────────────────────
+--lyap_eps [float]  : Maximum neighbor distance cutoff (default: 0.0 = disabled)
+		      -Only considers neighbors within this distance
+		      -0.0 disables the cutoff
+────────────────────────────────────────────────────────────────────────────────
+--lyap_fit_start [int]: Start of linear fit range (default: 1)
+		        -First k value for slope estimation
+────────────────────────────────────────────────────────────────────────────────
+--lyap_fit_end [int]: End of linear fit range (default: 10)
+		      -Last k value for slope estimation
+		      -The Lyapunov exponent is estimated as the slope
+		       of log divergence vs k in this range
+────────────────────────────────────────────────────────────────────────────────
+ENHANCED LYAPUNOV OPTIONS (K-NN + Auto-fit):
+────────────────────────────────────────────────────────────────────────────────
+--lyap_knn [int]    : Number of nearest neighbors (default: 15)
+		      -Uses K-nearest neighbors instead of just 1
+		      -Averages divergence across neighbors for robustness
+		      -Reduces noise in the Lyapunov estimate
+────────────────────────────────────────────────────────────────────────────────
+--lyap_autofit      : Enable automatic fit-region selection (flag)
+		      -Scans all candidate intervals to find the best one
+		      -Removes human bias in choosing fit range
+		      -Selects region with highest R² and longest length
+────────────────────────────────────────────────────────────────────────────────
+--lyap_r2min [float]: Minimum R² for auto-fit (default: 0.98)
+		      -Only accepts fit regions with R² >= this value
+		      -Higher values = stricter linear region requirement
+────────────────────────────────────────────────────────────────────────────────
+--lyap_minlen [int] : Minimum fit segment length (default: 6)
+		      -Only considers fit regions at least this long
+		      -Longer regions give more stable estimates
