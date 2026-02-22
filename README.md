@@ -152,7 +152,6 @@ If you use PyScale in your research, please cite:
 
 ## Acknowledgements
 
-This work has been supported by Aston University and the Nuffield Foundation.
 
 ## License
 
