@@ -157,5 +157,4 @@ If you use PyScale in your research, please cite:
 
 MIT License
 
-Copyright (c) 2024 Joshua Davies, Yeganeh Abdollahinejad, Darren R. Flower, Amit K. Chattopadhyay
 
