@@ -33,7 +33,9 @@ PyScale/
 └── resources/
     ├── help.txt        # CLI help documentation
     ├── data_files/     # Input nucleotide sequences (FASTA format)
-    └── scales/         # Propensity scale definitions
+    ├── scales/         # Propensity scale definitions
+    ├── output/         # Generated output files
+    └── case_study/     # Biological case study (human promoters)
 ```
 
 ## Usage
@@ -122,6 +124,23 @@ Run the Lyapunov estimator validation:
 ```bash
 python3 test_lyap.py
 ```
+
+## Biological Case Study
+
+The `resources/case_study/` directory contains an analysis of human promoter sequences comparing TATA-box and CpG island promoters.
+
+**Data Source**: EPDnew (Eukaryotic Promoter Database) - Human (hg38)
+
+**Promoters analyzed**:
+- **TATA-box genes**: HBB, TBP, MYC, FOS, PCNA
+- **CpG island genes**: GAPDH, ACTB, EEF1A1, RPS6, UBB
+
+**Key findings**:
+- CpG island promoters show higher GC content (60.1% vs 54.5%)
+- CpG promoters have slightly higher and more consistent LLE values with structural scales
+- TATA promoters show more variability, suggesting more diverse sequence patterns
+
+See `resources/case_study/README.md` for full details.
 
 ## Input/Output Formats
 
