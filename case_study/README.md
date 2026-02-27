@@ -42,16 +42,27 @@ Housekeeping genes whose promoters are embedded in CpG islands:
 - **Region**: -500 to +100 bp relative to TSS (600 bp total)
 - **Format**: FASTA
 
-## Files
+## Directory Structure
 
-- `fetch_promoters.py` - Script to download sequences from UCSC Genome Browser API
-- `analyze_promoters.py` - Analysis script using PyScale Lyapunov estimator
-- `analysis_results.csv` - Results table
-- `fasta/` - Directory containing FASTA files:
-  - Individual files: `HBB_1.fa`, `TBP_2.fa`, etc.
-  - `all_promoters.fa` - All 10 sequences
-  - `tata_promoters.fa` - TATA-box promoters only
-  - `cpg_promoters.fa` - CpG island promoters only
+```
+case_study/
+├── fasta/                      # FASTA sequence files
+│   ├── HBB_1.fa, TBP_2.fa, ... # Individual promoter sequences
+│   ├── all_promoters.fa        # All 10 sequences combined
+│   ├── tata_promoters.fa       # TATA-box promoters only
+│   └── cpg_promoters.fa        # CpG island promoters only
+├── scripts/                    # Analysis scripts
+│   ├── fetch_promoters.py      # Download from UCSC Genome Browser
+│   ├── analyze_promoters.py    # Run Lyapunov analysis
+│   ├── verify_promoters.py     # Verify TATA motifs
+│   └── generate_case_study_figures.py  # Generate figures
+├── results/                    # Output files
+│   └── analysis_results.csv    # Results table
+├── figures/                    # Generated figures
+│   ├── fig_case_study_comparison.png/pdf
+│   └── fig_case_study_profiles.png/pdf
+└── README.md                   # This file
+```
 
 ## Results Summary
 
@@ -78,11 +89,16 @@ Housekeeping genes whose promoters are embedded in CpG islands:
 ## Usage
 
 ```bash
+cd scripts/
+
 # Fetch sequences (requires internet)
 python fetch_promoters.py
 
 # Run analysis
 python analyze_promoters.py
+
+# Generate figures
+python generate_case_study_figures.py
 ```
 
 ## Citation

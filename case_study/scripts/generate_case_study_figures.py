@@ -116,15 +116,15 @@ def generate_figure1():
     ax2.spines['right'].set_visible(False)
     
     plt.tight_layout()
-    plt.savefig('fig_case_study_comparison.png', dpi=300, bbox_inches='tight')
-    plt.savefig('fig_case_study_comparison.pdf', bbox_inches='tight')
-    print("Saved: fig_case_study_comparison.png/pdf")
+    plt.savefig('../figures/fig_case_study_comparison.png', dpi=300, bbox_inches='tight')
+    plt.savefig('../figures/fig_case_study_comparison.pdf', bbox_inches='tight')
+    print("Saved: ../figures/fig_case_study_comparison.png/pdf")
     plt.close()
 
 
 def generate_figure2():
     """Generate propensity profiles for representative sequences."""
-    sequences = read_fasta('fasta/all_promoters.fa')
+    sequences = read_fasta('../fasta/all_promoters.fa')
     
     # Select representative sequences: TBP_2 (TATA) and ACTB_1 (CpG)
     selected = ['TBP_2', 'ACTB_1']
@@ -172,9 +172,9 @@ def generate_figure2():
             ax.set_xlim(0, 600)
     
     plt.tight_layout()
-    plt.savefig('fig_case_study_profiles.png', dpi=300, bbox_inches='tight')
-    plt.savefig('fig_case_study_profiles.pdf', bbox_inches='tight')
-    print("Saved: fig_case_study_profiles.png/pdf")
+    plt.savefig('../figures/fig_case_study_profiles.png', dpi=300, bbox_inches='tight')
+    plt.savefig('../figures/fig_case_study_profiles.pdf', bbox_inches='tight')
+    print("Saved: ../figures/fig_case_study_profiles.png/pdf")
     plt.close()
 
 

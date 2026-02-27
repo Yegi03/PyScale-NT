@@ -25,26 +25,29 @@ pip install -r requirements.txt
 ## Directory Structure
 
 ```
-PyScale/
-├── PyScaleTERM.py          # Terminal/command-line version
-├── PyScaleGUI.py           # Graphical user interface version
-├── PromoterAnalyzer.py     # Promoter analysis CLI tool
-├── PromoterAnalyzerGUI.py  # Promoter analysis GUI tool
-├── README.md               # This file
-├── requirements.txt        # Python dependencies
-├── test_lyap.py            # Lyapunov estimator validation script
-└── resources/
-    ├── help.txt            # CLI help documentation
-    ├── data_files/         # Input nucleotide sequences (FASTA format)
-    ├── scales/             # Propensity scale definitions
-    ├── output/             # Generated output files (runtime)
-    └── case_study/         # Biological case study (human promoters)
-        ├── fasta/          # Promoter FASTA sequences
-        ├── analyze_promoters.py
-        ├── fetch_promoters.py
-        ├── verify_promoters.py
-        ├── generate_case_study_figures.py
-        └── analysis_results.csv
+PyScale-NT/
+├── src/                        # Source code
+│   ├── PyScaleTERM.py          # Terminal/command-line version
+│   ├── PyScaleGUI.py           # Graphical user interface version
+│   ├── PromoterAnalyzer.py     # Promoter analysis CLI tool
+│   └── PromoterAnalyzerGUI.py  # Promoter analysis GUI tool
+├── data/                       # Data files
+│   ├── scales/                 # Propensity scale definitions (Scales.txt)
+│   ├── examples/               # Example input sequences (FASTA format)
+│   └── output/                 # Generated output files (runtime)
+├── case_study/                 # Biological case study (human promoters)
+│   ├── fasta/                  # 10 promoter FASTA sequences
+│   ├── scripts/                # Analysis scripts
+│   ├── results/                # CSV results
+│   └── figures/                # Generated figures (PNG/PDF)
+├── tests/                      # Test scripts
+│   └── test_lyap.py            # Lyapunov estimator validation
+├── docs/                       # Documentation
+│   └── help.txt                # CLI help documentation
+├── paper/                      # Paper source (LaTeX)
+├── README.md
+├── requirements.txt
+└── .gitignore
 ```
 
 ## Usage
@@ -52,7 +55,7 @@ PyScale/
 ### Terminal Version (PyScaleTERM.py)
 
 ```bash
-python3 PyScaleTERM.py [options]
+python3 src/PyScaleTERM.py [options]
 ```
 
 **Basic Options:**
@@ -88,7 +91,7 @@ python3 PyScaleTERM.py [options]
 ### GUI Version (PyScaleGUI.py)
 
 ```bash
-python3 PyScaleGUI.py
+python3 src/PyScaleGUI.py
 ```
 
 The GUI provides interactive controls for all options and an integrated plotter for comparing multiple sequence profiles.
@@ -99,16 +102,16 @@ A specialized tool for analyzing promoter sequences with TATA motif detection an
 
 ```bash
 # Analyze a single FASTA file
-python3 PromoterAnalyzer.py -f sequence.fa
+python3 src/PromoterAnalyzer.py -f sequence.fa
 
 # Analyze a directory of FASTA files
-python3 PromoterAnalyzer.py -d resources/case_study/fasta/
+python3 src/PromoterAnalyzer.py -d case_study/fasta/
 
 # Interactive mode
-python3 PromoterAnalyzer.py -i
+python3 src/PromoterAnalyzer.py -i
 
 # Export results to CSV
-python3 PromoterAnalyzer.py -f sequence.fa -o results.csv
+python3 src/PromoterAnalyzer.py -f sequence.fa -o results.csv
 ```
 
 **Options:**
@@ -168,12 +171,12 @@ For non-chaotic signals, the algorithm correctly returns "unavailable".
 Run the Lyapunov estimator validation:
 
 ```bash
-python3 test_lyap.py
+python3 tests/test_lyap.py
 ```
 
 ## Biological Case Study
 
-The `resources/case_study/` directory contains an analysis of human promoter sequences comparing TATA-box and CpG island promoters.
+The `case_study/` directory contains an analysis of human promoter sequences comparing TATA-box and CpG island promoters.
 
 **Data Source**: EPDnew (Eukaryotic Promoter Database) - Human (hg38)
 
@@ -198,7 +201,7 @@ The `resources/case_study/` directory contains an analysis of human promoter seq
 **Run the analysis:**
 
 ```bash
-cd resources/case_study
+cd case_study/scripts
 python3 analyze_promoters.py
 python3 generate_case_study_figures.py
 ```

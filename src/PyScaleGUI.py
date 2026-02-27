@@ -39,11 +39,12 @@ progress_output.grid(column=0, row=0)
 all_output_override = False
 complement_strand = False
 flip_read = False
-input_location = 'resources/data_files'
-output_location = 'resources/output'
+base_directory = os.path.join(os.path.dirname(__file__), '..')
+input_location = os.path.join(base_directory, 'data', 'examples')
+output_location = os.path.join(base_directory, 'data', 'output')
 output_type = 'ai'
 periodicity_assumption = False
-scale_location = 'resources/scales'
+scale_location = os.path.join(base_directory, 'data', 'scales')
 step_size = 2
 valid_extensions = '.txt', '.dat'
 window_averaging = False

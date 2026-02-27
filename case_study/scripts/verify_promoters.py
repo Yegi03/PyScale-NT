@@ -88,8 +88,8 @@ def main():
     print("Expected TATA box location: ~30bp upstream of TSS (positions 465-475)")
     print()
     
-    tata_seqs = read_fasta("fasta/tata_promoters.fa")
-    cpg_seqs = read_fasta("fasta/cpg_promoters.fa")
+    tata_seqs = read_fasta("../fasta/tata_promoters.fa")
+    cpg_seqs = read_fasta("../fasta/cpg_promoters.fa")
     
     print("=" * 80)
     print("TATA-BOX PROMOTERS - Checking for TATA motifs")

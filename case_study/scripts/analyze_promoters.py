@@ -356,7 +356,7 @@ def main():
             print()
             all_results.append(row)
     
-    with open("analysis_results.csv", "w") as f:
+    with open("../results/analysis_results.csv", "w") as f:
         headers = ["Promoter", "Category", "GC%"] + scales_to_test
         f.write(",".join(headers) + "\n")
         for row in all_results:
@@ -366,7 +366,7 @@ def main():
                 line.append(f"{val:.4f}" if not np.isnan(val) else "NA")
             f.write(",".join(line) + "\n")
     
-    print("\nResults saved to analysis_results.csv")
+    print("\nResults saved to ../results/analysis_results.csv")
 
 
 if __name__ == "__main__":

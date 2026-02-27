@@ -13,10 +13,10 @@ import sys
 
 # Configuration
 arguments = sys.argv[1:]
-resource_directory = os.path.join(os.path.dirname(__file__), 'resources')
+base_directory = os.path.join(os.path.dirname(__file__), '..')
 
 if '-h' in arguments:
-    with open(os.path.join(resource_directory, 'help.txt'), 'r') as f:
+    with open(os.path.join(base_directory, 'docs', 'help.txt'), 'r') as f:
         print(f.read())
     sys.exit()
 
@@ -30,12 +30,12 @@ window_averaging = '-wa' in arguments
 try:
     input_location = arguments[arguments.index('-f')+1]
 except ValueError:
-    input_location = os.path.join(resource_directory, 'data_files')
+    input_location = os.path.join(base_directory, 'data', 'examples')
 
 try:
     output_location = arguments[arguments.index('-o')+1]
 except ValueError:
-    output_location = os.path.join(resource_directory, 'output')
+    output_location = os.path.join(base_directory, 'data', 'output')
 
 try:
     output_type = tuple(arguments[arguments.index('-t')+1])
@@ -45,7 +45,7 @@ except ValueError:
 try:
     scale_location = arguments[arguments.index('-s')+1]
 except:
-    scale_location = os.path.join(resource_directory, 'scales')
+    scale_location = os.path.join(base_directory, 'data', 'scales')
 
 try:
     step_size = int(arguments[arguments.index('-ss')+1])
