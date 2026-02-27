@@ -20,7 +20,7 @@ build/
 resources/output/*
 !resources/output/.gitkeep
 
-# Archive (paper content - not part of the software)
+# Archive (development files not part of the software repository)
 archive/
 
 # Virtual environments

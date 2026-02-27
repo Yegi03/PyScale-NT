@@ -13,7 +13,6 @@
 \usepackage{academicons}
 \usepackage{orcidlink}
 \usepackage[]{csquotes}
-\usepackage{lineno}
 
 \definecolor{OliveGreen}{rgb}{0.43,0.55,0.24}
 \definecolor{gold}{rgb}{0.55,0.46,0.00}
@@ -35,7 +34,7 @@
 \author[1]{Joshua Davies}
 \author[2]{Yeganeh Abdollahinejad}
 \author[3]{Darren R.\ Flower}
-\author[4]{Amit K.\ Chattopadhyay\thanks{Corresponding author. Email: \texttt{[amit.chattopadhyay@ncirl.ie]}}}
+\author[4]{Amit K.\ Chattopadhyay\thanks{Corresponding author. Email: \texttt{amit.chattopadhyay@ncirl.ie}}}
 
 \affil[1]{King Edward VI College, Warwickshire CV11 4BE, UK}
 \affil[2] {School of Science, Engineering, and Technology, Pennsylvania State University, Harrisburg, PA, USA}
@@ -76,23 +75,23 @@ PyScale integrates ideas from three lines of research that are often treated sep
 \subsection{Nucleotide propensity-scale profiling}
 \label{subsec:nucleotide_scales}
 
-Propensity-scale profiling converts a symbolic sequence into a numerical series by mapping each residue or $k$-mer to a value representing a property of interest, followed by optional local smoothing such as moving-window averaging. In protein bioinformatics, this paradigm is supported by mature resources such as AAindex, which curates hundreds of amino acid indices and enables systematic feature construction for comparative analysis and machine learning \citep{Kawashima2008AAindex}. For nucleic acids, propensity scales are distributed across the thermodynamics, structural biology, and biophysics literatures and are often reported in heterogeneous formats. This fragmentation makes it difficult to apply nucleotide scales consistently across studies or to compare results across different scale sets and profiling assumptions.
+Propensity-scale profiling converts a symbolic sequence into a numerical series by mapping each residue or $k$-mer to a value representing a property of interest, followed by optional local smoothing such as moving-window averaging. In protein bioinformatics, this paradigm is supported by mature resources such as AAindex, which curates hundreds of amino acid indices and enables systematic feature construction for comparative analysis and machine learning \citep{Kawashima2008AAindex}. Recent work has further advanced this direction by developing generalized property-based encoders that partition physicochemical scales into semantically consistent groups, improving predictive performance for protein engineering tasks \citep{MedinaOrtiz2022}. For nucleic acids, propensity scales are distributed across the thermodynamics, structural biology, and biophysics literatures and are often reported in heterogeneous formats. This fragmentation makes it difficult to apply nucleotide scales consistently across studies or to compare results across different scale sets and profiling assumptions.
 
-A foundational contribution in this direction is the work of Baldi and Baisn\'ee, who introduced a general framework for using di- and tri-nucleotide scales to score and profile sequences and demonstrated that such scales capture structural and thermodynamic tendencies that are not apparent from sequence alone \citep{Baldi2000Additive}. Their study highlighted both the availability of diverse nucleotide indices and the lack of unified tooling for applying them at scale. More recently, DNASCANNER v2 consolidated a large set of DNA properties into an accessible profiling platform and illustrated how property-derived features can support downstream applications \citep{Preeti2024DNAScannerV2}. Together, these efforts motivate two practical requirements for nucleotide-scale profiling: a curated and extensible scale repository, and reproducible software that transforms sequences into profiles suitable for analysis and comparison.
+A foundational contribution in this direction is the work of Baldi and Baisn\'ee, who introduced a general framework for using di- and tri-nucleotide scales to score and profile sequences and demonstrated that such scales capture structural and thermodynamic tendencies that are not apparent from sequence alone \citep{Baldi2000Additive}. Their study highlighted both the availability of diverse nucleotide indices and the lack of unified tooling for applying them at scale. Indeed, four decades of research on B-DNA structural properties have established that parameters such as twist, roll, and tilt at the dinucleotide level are fundamentally sequence-dependent \citep{DaRosa2021}. More recently, DNASCANNER v2 consolidated a large set of DNA properties into an accessible profiling platform and illustrated how property-derived features can support downstream applications \citep{Preeti2024DNAScannerV2}. Together, these efforts motivate two practical requirements for nucleotide-scale profiling: a curated and extensible scale repository, and reproducible software that transforms sequences into profiles suitable for analysis and comparison.
 
 PyScale addresses these requirements by bundling a curated nucleotide scale collection with standardized routines for profile generation under multiple transformation paradigms. In addition, PyScale records profiling parameters and analysis metadata for each output, which supports reproducible profile generation and systematic evaluation of how scale choice, windowing, and boundary conventions influence downstream comparisons.
 
 \subsection{Alignment-free sequence characterization}
 \label{subsec:alignment_free}
 
-Alignment-free methods address well-known challenges of classical alignment when sequences are highly divergent, contain rearrangements, or must be compared at large scale. Surveys by Vinga and Almeida and by Zielezi\'nski \emph{et al.} provide broad overviews of alignment-free approaches, including $k$-mer statistics, substring and spaced-word measures, sketching methods, compression- and information-theoretic metrics, and numerical or signal-based encodings \citep{Vinga2003AlignmentFree,Zielezinski2017AlignmentFreeReview,Song2014}. Additional reviews emphasize both methodological development and practical evaluation protocols for alignment-free comparison, particularly in large-scale and next-generation sequencing settings \citep{BonhamCarter2014,Song2014}. A common principle across these methods is to replace explicit residue-to-residue correspondence with representations that preserve useful similarity structure while improving scalability and robustness to rearrangements.
+Alignment-free methods address well-known challenges of classical alignment when sequences are highly divergent, contain rearrangements, or must be compared at large scale. Surveys by Vinga and Almeida and by Zielezi\'nski \emph{et al.} provide broad overviews of alignment-free approaches, including $k$-mer statistics, substring and spaced-word measures, sketching methods, compression- and information-theoretic metrics, and numerical or signal-based encodings \citep{Vinga2003AlignmentFree,Zielezinski2017AlignmentFreeReview,Song2014}. A comprehensive 2024 survey on $k$-mer methods further highlights their pivotal role in sequence comparison, variant detection, metagenomic classification, and other contemporary genomic analyses \citep{Moeckel2024}. Additional reviews emphasize both methodological development and practical evaluation protocols for alignment-free comparison, particularly in large-scale and next-generation sequencing settings \citep{BonhamCarter2014,Song2014}. Recent developments continue to advance the field, including linear-time clustering algorithms \citep{Wright2024}, signal processing approaches for phylogeny reconstruction \citep{Boumajdi2024}, and chaos game representation methods for unsupervised sequence clustering \citep{Alipour2024}. A common principle across these methods is to replace explicit residue-to-residue correspondence with representations that preserve useful similarity structure while improving scalability and robustness to rearrangements.
 
 Propensity-based profiling fits naturally within alignment-free analysis, but it differs from purely compositional approaches in two ways. First, it introduces interpretable meaning through the scale mapping, which can emphasize thermodynamic stability, structural flexibility, or other domain-relevant properties. Second, it preserves positional structure in the resulting profile, enabling analyses such as local pattern inspection, periodicity assessment, and region-level comparisons. PyScale leverages these strengths through both interactive visualization for exploratory work and batch computation for large-scale comparisons. The resulting profiles can be compared using standard alignment-free similarity measures such as correlation or distance-based clustering and can be used as inputs to downstream models.
 
 \subsection{Complexity measures and Lyapunov exponent estimation for discrete series}
 \label{subsec:lyapunov}
 
-Chaoticity of a sequence is a measure of the randomness; the more chaotic it is, the closer to the equilibrium state the process would be. The largest Lyapunov exponent (LLE) is widely used to measure the degree of randomness because it summarizes the mean exponential divergence of initially nearby trajectories in reconstructed state space. Practical estimation of the LLE from scalar data commonly uses delay-coordinate embedding and neighbor divergence tracking. The Rosenstein algorithm is frequently used in applied settings due to its success in dealing with finite and noisy time series and its relatively straightforward implementation \citep{Rosenstein1993}. Related estimators and refinements have also been proposed, including the robust approach of Kantz \citep{Kantz1994}. Wolf \emph{et al.} proposed an earlier approach based on repeated renormalization of nearby trajectories and remains a standard reference in the applied literature \citep{Wolf1985}.
+Chaoticity of a sequence is a measure of the randomness; the more chaotic it is, the closer to the equilibrium state the process would be. Various bioinformatics tools have been developed to estimate sequence complexity using entropy, compression, and related measures \citep{OrlovOrlova2023}. The largest Lyapunov exponent (LLE) is widely used to measure the degree of randomness because it summarizes the mean exponential divergence of initially nearby trajectories in reconstructed state space. Recent ecological analyses demonstrate that chaotic dynamics, characterized by positive Lyapunov exponents, are more prevalent in natural systems than previously recognized \citep{Rogers2022}. Practical estimation of the LLE from scalar data commonly uses delay-coordinate embedding and neighbor divergence tracking. The Rosenstein algorithm is frequently used in applied settings due to its success in dealing with finite and noisy time series and its relatively straightforward implementation \citep{Rosenstein1993}. Related estimators and refinements have also been proposed, including the robust approach of Kantz \citep{Kantz1994}. Wolf \emph{et al.} proposed an earlier approach based on repeated renormalization of nearby trajectories and remains a standard reference in the applied literature \citep{Wolf1985}.
 
 Lyapunov estimation is sensitive to methodological choices, including how neighbors are selected, how temporally adjacent points are excluded, and how the fit interval is chosen on the mean log-divergence curve. Temporal exclusion is commonly implemented via a Theiler window \citep{Theiler1986}. These sensitivities become more pronounced when the analyzed series is short, filtered, or derived from a transformed representation rather than directly observed dynamics. In PyScale, the input to the estimator is a sequence-derived numerical profile. For this reason, the resulting exponent is interpreted as a comparative profile-level divergence or irregularity index under a chosen scale and profiling configuration, rather than as definitive evidence of chaos in an underlying biological dynamical system. When automatic fit-region selection is enabled, PyScale reports \enquote{unavailable} if no candidate interval satisfies the acceptance criteria used to identify a credible linear regime.
 
@@ -229,7 +228,7 @@ PyScale optionally estimates the largest Lyapunov exponent from a time delayed o
 Here, the analyzed time series is a sequence-derived numerical profile rather than a measured physical trajectory. Accordingly, the estimate is interpreted as a comparative divergence or irregularity index of the profile under a chosen scale and profiling configuration, rather than as definitive evidence of biological chaos. The estimator follows a Rosenstein-style workflow for discrete series \citep{Rosenstein1993} and includes practical mechanisms to improve robustness and reduce dependence on user-selected fit intervals.
 
 \subsubsection{Delay-coordinate embedding}
-Given a scalar profile $P(i)$ of length $N$, delay-coordinate embedding is constructed using embedding dimension $m$ and delay $\tau$:
+Given a scalar profile $P(i)$ of length $N$, delay-coordinate embedding \citep{Takens1981} is constructed using embedding dimension $m$ and delay $\tau$:
 \begin{equation}
 \mathbf{x}(i) = \big[P(i),\, P(i+\tau),\, \dots,\, P(i+(m-1)\tau)\big],
 \label{eq:embedding}
@@ -298,7 +297,7 @@ The primary validation benchmark is the logistic map,
 x_{n+1} = r x_n(1-x_n),
 \label{eq:logistic}
 \end{equation}
-a canonical one-dimensional nonlinear system widely used in Lyapunov estimation studies. We use $r=4.0$, which yields chaotic dynamics on $(0,1)$ and has theoretical largest Lyapunov exponent $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$ under standard assumptions. For each trial, an initial condition $x_0 \in (0,1)$ is selected, the system is iterated for a burn-in period of $N_{\mathrm{burn}}=200$ steps to reduce transient effects, and the subsequent segment of length $N=2800$ is used for estimation. This benchmark provides ground truth for quantitative error analysis.
+a canonical one-dimensional nonlinear system widely used in Lyapunov estimation studies \citep{May1976}. We use $r=4.0$, which yields chaotic dynamics on $(0,1)$ and has theoretical largest Lyapunov exponent $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$ under standard assumptions. For each trial, an initial condition $x_0 \in (0,1)$ is selected, the system is iterated for a burn-in period of $N_{\mathrm{burn}}=200$ steps to reduce transient effects, and the subsequent segment of length $N=2800$ is used for estimation. This benchmark provides ground truth for quantitative error analysis.
 
 \subsubsection{Periodic logistic map (non-chaotic)}
 To test behavior on non-chaotic dynamics within the same family, we use the logistic map with $r=3.2$, which exhibits stable periodic dynamics. In this regime the mean log-divergence curve is not expected to contain a sustained linear growth region consistent with exponential divergence. In automatic fit mode, the desired behavior is therefore to return \texttt{unavailable} when no interval satisfies the acceptance criteria.
@@ -524,7 +523,7 @@ Minimum series length & $N$ & --- & $\ge 1500$ \\
 \subsection{Biological case study: Human promoter analysis}
 \label{subsec:biological_case_study}
 
-To demonstrate PyScale on biologically relevant sequences, we analyzed human promoter regions from two functionally distinct classes: genes with canonical TATA boxes and housekeeping genes whose promoters are embedded in CpG islands and typically lack TATA elements. Promoter sequences were obtained from EPDnew, the Eukaryotic Promoter Database \citep{Meylan2020EPD}, selecting the Human collection (Homo sapiens, GRCh38/hg38 assembly).
+To demonstrate PyScale on biologically relevant sequences, we analyzed human promoter regions from two functionally distinct classes: genes with canonical TATA boxes and housekeeping genes whose promoters are embedded in CpG islands and typically lack TATA elements. These two promoter architectures represent well-characterized regulatory paradigms with distinct sequence features recognized by the transcription machinery, as catalogued in resources such as JASPAR \citep{JASPAR2024}. Promoter sequences were obtained from EPDnew, the Eukaryotic Promoter Database \citep{Meylan2020EPD}, selecting the Human collection (Homo sapiens, GRCh38/hg38 assembly).
 
 \subsubsection{Promoter selection and data extraction}
 We selected ten promoters representing two classes:
@@ -532,13 +531,13 @@ We selected ten promoters representing two classes:
   \item \textbf{TATA-box promoters} (5 sequences): HBB (hemoglobin subunit beta), TBP (TATA-box binding protein), MYC (MYC proto-oncogene), FOS (Fos proto-oncogene), and PCNA (proliferating cell nuclear antigen).
   \item \textbf{CpG island promoters} (5 sequences): GAPDH (glyceraldehyde-3-phosphate dehydrogenase), ACTB (actin beta), EEF1A1 (eukaryotic translation elongation factor 1 alpha 1), RPS6 (ribosomal protein S6), and UBB (ubiquitin B).
 \end{itemize}
-For each promoter, the region spanning $-500$ to $+100$ bp relative to the annotated transcription start site (TSS) was extracted, yielding 600 bp sequences suitable for profile analysis. TSS positions and strand orientations were verified against EPDnew annotations.
+For each promoter, the region spanning $-500$ to $+100$ bp relative to the annotated transcription start site (TSS) was extracted using the UCSC Genome Browser \citep{Nassar2023UCSC}, yielding 600 bp sequences suitable for profile analysis. TSS positions and strand orientations were verified against EPDnew annotations.
 
 \subsubsection{GC content and sequence composition}
-Consistent with the expected properties of these promoter classes, CpG island promoters exhibited higher GC content than TATA-box promoters. The mean GC content was 54.5\% (range: 42.5--65.2\%) for TATA-box promoters and 60.1\% (range: 53.5--69.8\%) for CpG island promoters. This difference reflects the compositional bias associated with CpG island embedding.
+Consistent with the expected properties of these promoter classes, CpG island promoters exhibited higher GC content than TATA-box promoters. The mean GC content was 54.5\% (range: 42.5--65.2\%) for TATA-box promoters and 60.1\% (range: 53.5--69.8\%) for CpG island promoters (Figure~\ref{fig:case_study_comparison}A). This difference reflects the compositional bias associated with CpG island embedding and confirms that the selected sequences represent the expected compositional characteristics of their respective promoter classes.
 
 \subsubsection{Propensity profile analysis and Lyapunov estimation}
-Each promoter sequence was converted to a propensity profile using multiple scales (twist, GC content, and purine/pyrimidine) and analyzed using the Lyapunov estimator with the default configuration ($m=2$, $\tau=1$, $K=15$, automatic fit selection with $R^2_{\min}=0.98$). Table~\ref{tab:promoter_results} summarizes the Lyapunov estimates and GC content for each promoter.
+Each promoter sequence was converted to a propensity profile using multiple scales (twist, GC content, and purine/pyrimidine) and analyzed using the Lyapunov estimator with the default configuration ($m=2$, $\tau=1$, $K=15$, automatic fit selection with $R^2_{\min}=0.98$). Figure~\ref{fig:case_study_profiles} illustrates representative propensity profiles for TBP (TATA-box class) and ACTB (CpG island class) under the twist and GC content scales. The smoothed profiles reveal distinct patterns: the TBP promoter shows characteristic fluctuations with a pronounced dip in the TATA region upstream of the TSS, while the ACTB promoter exhibits consistently higher GC values throughout the sequence, reflecting its CpG island embedding. Table~\ref{tab:promoter_results} summarizes the Lyapunov estimates and GC content for each promoter.
 
 \begin{table}[H]
 \centering
@@ -567,9 +566,23 @@ UBB\_2 & CpG & 57.2 & 0.038 & 0.036 \\
 \end{table}
 
 \subsubsection{Comparison between promoter classes}
-Aggregating across promoters, CpG island promoters exhibited slightly higher mean Lyapunov estimates than TATA-box promoters under the twist scale (0.033 vs.\ 0.027) and GC content scale (0.034 vs.\ 0.028). Additionally, CpG island promoters showed lower variability in their estimates (standard deviation 0.006--0.008) compared to TATA-box promoters (standard deviation 0.018), suggesting more consistent profile structure within this class. These observations are consistent with the interpretation that CpG island promoters, with their higher and more uniform GC content, produce profiles with characteristic divergence structure that differs systematically from TATA-box promoters.
+Aggregating across promoters, CpG island promoters exhibited slightly higher mean Lyapunov estimates than TATA-box promoters under the twist scale (0.033 vs.\ 0.027) and GC content scale (0.034 vs.\ 0.028), as shown in Figure~\ref{fig:case_study_comparison}B. Additionally, CpG island promoters showed lower variability in their estimates (standard deviation 0.006--0.008) compared to TATA-box promoters (standard deviation 0.018), suggesting more consistent profile structure within this class. These observations are consistent with the interpretation that CpG island promoters, with their higher and more uniform GC content, produce profiles with characteristic divergence structure that differs systematically from TATA-box promoters.
 
 This case study demonstrates that PyScale can be applied to biologically meaningful sequence comparisons and that the Lyapunov-based complexity index captures differences between functionally distinct promoter classes.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_case_study_comparison.pdf}
+\caption{Comparison of promoter characteristics between TATA-box (red) and CpG island (blue) promoter classes. (A) GC content distribution showing higher values for CpG island promoters (mean 60.1\%) compared to TATA-box promoters (mean 54.5\%). (B) Lyapunov exponent estimates under the twist scale, with CpG island promoters exhibiting slightly higher mean values (0.033) than TATA-box promoters (0.027). Dashed lines indicate class means. N/A indicates no valid linear region was detected for RPS6\_1 under the automatic fit criteria.}
+\label{fig:case_study_comparison}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_case_study_profiles.pdf}
+\caption{Propensity profiles for representative promoter sequences. (A, B) Twist angle profiles for TBP (TATA-box class) and ACTB (CpG island class). (C, D) GC content profiles for the same sequences. Gray lines show raw nucleotide-level values; colored lines show smoothed profiles (window size 23). The vertical dashed green line marks the transcription start site (TSS) at position 500. The orange shaded region in panels A and B indicates the canonical TATA box region ($-40$ to $-20$ bp upstream of TSS). The ACTB profile shows consistently higher GC values, characteristic of CpG island embedding.}
+\label{fig:case_study_profiles}
+\end{figure}
 
 \subsection{Summary}
 \label{subsec:summary_findings}
@@ -619,9 +632,12 @@ A central contribution is an integrated largest Lyapunov exponent estimator for 
 \section*{Availability and Implementation}
 \label{sec:availability}
 
-PyScale is implemented in Python 3 and is distributed as open-source software at \url{https://github.com/flowerdrf/PyScale}
+PyScale is implemented in Python 3 and is distributed as open-source software at \url{https://github.com/Yegi03/PyScale-NT}
  under the \texttt{MIT} license. The toolkit includes a command-line interface (\texttt{PyScaleTERM.py}) for batch processing and a graphical interface (\texttt{PyScaleGUI.py}) for interactive visualization and comparison. Core dependencies are \texttt{numpy} and \texttt{matplotlib}, and the GUI additionally requires \texttt{tkinter}. Documentation, example input files, and scripts required to reproduce the figures reported in this manuscript are provided in the repository.
 
+\section*{Data Availability}
+
+The promoter sequences analyzed in the biological case study were obtained from EPDnew (\url{https://epd.expasy.org/epd/}) and the UCSC Genome Browser (\url{https://genome.ucsc.edu/}) and are publicly accessible. The curated nucleotide propensity scale collection is distributed with the PyScale software. Benchmark signals (logistic map, sine wave) are generated algorithmically and are reproducible using the scripts provided in the repository. All data and code required to reproduce the results reported in this manuscript are available at \url{https://github.com/Yegi03/PyScale-NT}.
 
 \appendix
 

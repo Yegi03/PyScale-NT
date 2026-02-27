@@ -95,9 +95,14 @@ def moving_average(profile, window_size=23):
     return np.array(result)
 
 
-def return_lyapunov(array, m=2, tau=1, k_max=30, k_neighbors=15):
+def return_lyapunov(array, m=2, tau=1, k_max=30, k_neighbors=15, window_size=23):
     """Estimate Lyapunov exponent using Rosenstein algorithm with KNN."""
     x = np.asarray(array, dtype=float)
+    
+    half_width = window_size // 2
+    if len(x) > 2 * half_width:
+        x = x[half_width:-half_width]
+    
     N = len(x)
     
     if N < 50:
@@ -209,7 +214,7 @@ def analyze_sequence(name, seq, tss=500, scales=None, window_size=23):
     for scale in scales:
         profile = sequence_to_profile(seq, scale)
         smoothed = moving_average(profile, window_size)
-        lyap_val, meta = return_lyapunov(smoothed)
+        lyap_val, meta = return_lyapunov(smoothed, window_size=window_size)
         result['lyapunov'][scale] = {'value': lyap_val, 'meta': meta}
     
     return result
