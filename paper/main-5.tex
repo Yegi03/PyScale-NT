@@ -1,0 +1,644 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=1in]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{url}
+\usepackage{authblk}
+\usepackage{hyperref}
+\usepackage{lineno}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{academicons}
+\usepackage{orcidlink}
+\usepackage[]{csquotes}
+\usepackage{lineno}
+
+\definecolor{OliveGreen}{rgb}{0.43,0.55,0.24}
+\definecolor{gold}{rgb}{0.55,0.46,0.00}
+
+
+\title{PyScale: A Curated Nucleotide Propensity-Scale Resource with Reproducible Profile Analysis and Robust Lyapunov-Based Complexity Estimation}
+
+% Option 2 (more methods-focused, highlights KNN + auto-fit without sounding like marketing)
+% \title{PyScale: Reproducible Nucleotide Propensity Profiling with K-Nearest-Neighbor Rosenstein Lyapunov Estimation and Automatic Fit-Region Selection}
+
+% Option 3 (more bioinformatics framing, emphasizes alignment-free characterization)
+% \title{PyScale: Alignment-Free Nucleotide Sequence Characterization Using Curated Propensity Profiles and Reproducible Lyapunov-Based Complexity Metrics}
+
+% Option 4 (shorter, clean, still complete)
+% \title{PyScale: Curated Nucleotide Propensity Profiles and Reproducible Lyapunov-Based Profile Complexity Estimation}
+
+
+
+\author[1]{Joshua Davies}
+\author[2]{Yeganeh Abdollahinejad}
+\author[3]{Darren R.\ Flower}
+\author[4]{Amit K.\ Chattopadhyay\thanks{Corresponding author. Email: \texttt{[amit.chattopadhyay@ncirl.ie]}}}
+
+\affil[1]{King Edward VI College, Warwickshire CV11 4BE, UK}
+\affil[2] {School of Science, Engineering, and Technology, Pennsylvania State University, Harrisburg, PA, USA}
+\affil[3] {School of Life and Health Sciences, Aston University, Birmingham, UK}
+\affil[4]{School of Business and Social Science, National College of Ireland, Dublin, Ireland}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\linenumbers
+\begin{abstract}
+Nucleotide sequences encode functional and structural information that is not always easy to detect using alignment alone, particularly when sequences are highly diverged, rearranged, or contain complex repeat structures. Propensity-scale profiling offers an alignment-free alternative by converting sequences into quantitative profiles that reflect physicochemical and structural properties. This approach is well established for proteins, but it is less standardized for nucleic acids. We present PyScale, an algorithmic toolkit that curates nucleotide propensity scales and provides reproducible software to transform DNA or RNA sequences into time-series-like profiles for statistical analysis. PyScale bundles 267 nucleotide scales (243 mononucleotide, 46 dinucleotide, 17 trinucleotide) and supports four independent paradigms: window averaging with variable step sizes, periodicity assumption, reverse reading, and complementary strand conversion. To understand the degree of randomness in the sequence, PyScale also incorporates the largest Lyapunov exponent estimator, structured on Rosenstein algorithm and validated using the chaotic logistic map ($r=4.0$, theoretical $\lambda=\ln(2)$). Incorporating both a (Python) command-line pipeline for batch processing and a graphical interface for interactive visualization and multi-sequence comparison, PyScale provides an accessible and extensible framework for alignment-free nucleotide sequence characterization using interpretable property profiles and reproducible profile-complexity estimation.
+\end{abstract}
+
+\noindent {\bf Keywords}: nucleotide propensity scales; alignment-free sequence analysis; sequence profiling; window averaging; periodicity; Lyapunov exponent; Rosenstein algorithm; bioinformatics software; DNA and RNA visualization
+
+\section{Introduction}
+
+Sequence analysis is commonly driven by alignment-based workflows and motif-centric approaches, but many biologically relevant signals are not expressed as simple contiguous motifs or globally conserved sequence blocks. Regulatory architecture, repeat structure, local mechanical properties, and context-dependent thermodynamics can yield functional patterns that are difficult to capture through alignment alone, particularly for large-scale or highly divergent comparisons \citep{Vinga2003AlignmentFree,Zielezinski2017AlignmentFreeReview}. Alignment-free methods address some of these limitations by representing sequences through statistics or features that can be compared without direct residue-to-residue correspondence, which is especially useful for high-throughput analyses and for sequences with complex rearrangements \citep{Zielezinski2017AlignmentFreeReview}.
+
+One practical alignment-free strategy is property profiling, where a sequence is mapped to a numeric series based on a chosen property scale and then smoothed or summarized across positions. For protein sequences, this approach is supported by resources such as AAindex, which provides curated indices that map amino acids to physicochemical values and enables systematic feature construction for downstream analysis \citep{Kawashima2008AAindex}. In contrast, nucleotide property scales exist across the literature but are less centralized, and the surrounding analysis tooling is comparatively limited. Prior work demonstrated that di- and trinucleotide scales can capture DNA structural and thermodynamic tendencies and can be used to score or profile sequences in a unified framework \citep{Baldi2000Additive}. More recent systems that aggregate many DNA properties further highlight both the utility of these features and the need for accessible, reproducible implementations that can be integrated into modern pipelines \citep{Preeti2024DNAScannerV2}.
+
+In this work we introduce PyScale, a Python toolkit designed to make nucleotide propensity-scale profiling practical at both exploratory and batch scales. PyScale provides a curated scale collection and two complementary interfaces: a command-line interface (MS-DOS and Linux) for high-throughput processing of many sequences and a graphical interface for interactive visualization comparing multiple profiles. The software implements four core profiling paradigms that frequently arise in nucleic-acid analysis: window averaging with variable step sizes, periodicity assumption, reverse reading, and complementary strand conversion. Together, these embed an ensemble-averaging infrastructure at the heart of the letter-to-number sequencing algorithm, for example, when investigating periodic repeats, strand symmetry, or orientation effects.
+
+A second goal of PyScale is to support quantitative characterization of profile structure beyond visual inspection. Therefore, we integrate the largest Lyapunov exponent estimator based on the established time-series methodology for discrete data \citep{Rosenstein1993,Wolf1985}. Because practical Lyapunov estimation can be sensitive to neighbor selection and fit-region choice, we include K-nearest-neighbor averaging and an automatic fit-region selection procedure to improve robustness and reproducibility. 
+
+This study presents three key outcomes. First, a curated set of 267 nucleotide propensity scales (mononucleotide, dinucleotide, and trinucleotide) is organized for direct computational use. Second, both the Graphical User Interface (GUI) and terminal versions accommodate reproducible profiling framework supporting window averaging, periodicity, reverse reading, and complementary strand analysis of the DNA (or RNA or protein) sequences. Finally, to analyze the degree of chaoticity in the sequence is studied from an evaluation of the Lyapunov exponent for propensity profiles based on Rosenstein-style divergence curves, extended with K-nearest-neighbor averaging and automatic fit-region selection. 
+
+\section{Related Work and Literature Review}
+\label{sec:related}
+
+PyScale integrates ideas from three lines of research that are often treated separately: nucleotide propensity-scale profiling, alignment-free sequence characterization, and nonlinear time-series methodology for quantifying complexity, including Lyapunov exponent estimation. This section summarizes the most relevant peer-reviewed work in each area and clarifies how PyScale builds on these foundations.
+
+\subsection{Nucleotide propensity-scale profiling}
+\label{subsec:nucleotide_scales}
+
+Propensity-scale profiling converts a symbolic sequence into a numerical series by mapping each residue or $k$-mer to a value representing a property of interest, followed by optional local smoothing such as moving-window averaging. In protein bioinformatics, this paradigm is supported by mature resources such as AAindex, which curates hundreds of amino acid indices and enables systematic feature construction for comparative analysis and machine learning \citep{Kawashima2008AAindex}. For nucleic acids, propensity scales are distributed across the thermodynamics, structural biology, and biophysics literatures and are often reported in heterogeneous formats. This fragmentation makes it difficult to apply nucleotide scales consistently across studies or to compare results across different scale sets and profiling assumptions.
+
+A foundational contribution in this direction is the work of Baldi and Baisn\'ee, who introduced a general framework for using di- and tri-nucleotide scales to score and profile sequences and demonstrated that such scales capture structural and thermodynamic tendencies that are not apparent from sequence alone \citep{Baldi2000Additive}. Their study highlighted both the availability of diverse nucleotide indices and the lack of unified tooling for applying them at scale. More recently, DNASCANNER v2 consolidated a large set of DNA properties into an accessible profiling platform and illustrated how property-derived features can support downstream applications \citep{Preeti2024DNAScannerV2}. Together, these efforts motivate two practical requirements for nucleotide-scale profiling: a curated and extensible scale repository, and reproducible software that transforms sequences into profiles suitable for analysis and comparison.
+
+PyScale addresses these requirements by bundling a curated nucleotide scale collection with standardized routines for profile generation under multiple transformation paradigms. In addition, PyScale records profiling parameters and analysis metadata for each output, which supports reproducible profile generation and systematic evaluation of how scale choice, windowing, and boundary conventions influence downstream comparisons.
+
+\subsection{Alignment-free sequence characterization}
+\label{subsec:alignment_free}
+
+Alignment-free methods address well-known challenges of classical alignment when sequences are highly divergent, contain rearrangements, or must be compared at large scale. Surveys by Vinga and Almeida and by Zielezi\'nski \emph{et al.} provide broad overviews of alignment-free approaches, including $k$-mer statistics, substring and spaced-word measures, sketching methods, compression- and information-theoretic metrics, and numerical or signal-based encodings \citep{Vinga2003AlignmentFree,Zielezinski2017AlignmentFreeReview,Song2014}. Additional reviews emphasize both methodological development and practical evaluation protocols for alignment-free comparison, particularly in large-scale and next-generation sequencing settings \citep{BonhamCarter2014,Song2014}. A common principle across these methods is to replace explicit residue-to-residue correspondence with representations that preserve useful similarity structure while improving scalability and robustness to rearrangements.
+
+Propensity-based profiling fits naturally within alignment-free analysis, but it differs from purely compositional approaches in two ways. First, it introduces interpretable meaning through the scale mapping, which can emphasize thermodynamic stability, structural flexibility, or other domain-relevant properties. Second, it preserves positional structure in the resulting profile, enabling analyses such as local pattern inspection, periodicity assessment, and region-level comparisons. PyScale leverages these strengths through both interactive visualization for exploratory work and batch computation for large-scale comparisons. The resulting profiles can be compared using standard alignment-free similarity measures such as correlation or distance-based clustering and can be used as inputs to downstream models.
+
+\subsection{Complexity measures and Lyapunov exponent estimation for discrete series}
+\label{subsec:lyapunov}
+
+Chaoticity of a sequence is a measure of the randomness; the more chaotic it is, the closer to the equilibrium state the process would be. The largest Lyapunov exponent (LLE) is widely used to measure the degree of randomness because it summarizes the mean exponential divergence of initially nearby trajectories in reconstructed state space. Practical estimation of the LLE from scalar data commonly uses delay-coordinate embedding and neighbor divergence tracking. The Rosenstein algorithm is frequently used in applied settings due to its success in dealing with finite and noisy time series and its relatively straightforward implementation \citep{Rosenstein1993}. Related estimators and refinements have also been proposed, including the robust approach of Kantz \citep{Kantz1994}. Wolf \emph{et al.} proposed an earlier approach based on repeated renormalization of nearby trajectories and remains a standard reference in the applied literature \citep{Wolf1985}.
+
+Lyapunov estimation is sensitive to methodological choices, including how neighbors are selected, how temporally adjacent points are excluded, and how the fit interval is chosen on the mean log-divergence curve. Temporal exclusion is commonly implemented via a Theiler window \citep{Theiler1986}. These sensitivities become more pronounced when the analyzed series is short, filtered, or derived from a transformed representation rather than directly observed dynamics. In PyScale, the input to the estimator is a sequence-derived numerical profile. For this reason, the resulting exponent is interpreted as a comparative profile-level divergence or irregularity index under a chosen scale and profiling configuration, rather than as definitive evidence of chaos in an underlying biological dynamical system. When automatic fit-region selection is enabled, PyScale reports \enquote{unavailable} if no candidate interval satisfies the acceptance criteria used to identify a credible linear regime.
+
+To improve reproducibility and reduce dependence on analyst choices, PyScale extends a Rosenstein-style workflow \citep{Rosenstein1993} with two practical mechanisms. First, K-nearest-neighbor averaging reduces sensitivity to any single neighbor relationship and stabilizes the estimated divergence curve. Second, automatic fit-region selection applies explicit criteria, including positive slope, a minimum segment length, and a minimum $R^2$ threshold. These design choices support consistent behavior across batch runs and reduce the variability introduced by manual interval selection.
+
+\subsection{Positioning of PyScale}
+\label{subsec:positioning}
+
+Prior work shows that nucleotide property scales can encode meaningful structural and thermodynamic tendencies \citep{Baldi2000Additive} and that alignment-free representations are increasingly important for large-scale and highly diverse sequence analyses \citep{Vinga2003AlignmentFree,Zielezinski2017AlignmentFreeReview,Song2014}. PyScale builds on these foundations by providing a unified, open-source toolkit that combines a curated nucleotide scale collection, flexible propensity-profile generation under multiple transformation paradigms, and a reproducible Lyapunov-based profile complexity estimator grounded in established time-series methodology \citep{Rosenstein1993,Kantz1994}. In the remainder of the paper, we describe the scale collection and profiling pipeline, detail the Lyapunov estimator and its robustness extensions, and evaluate the approach on theoretical benchmarks and example sequence comparisons.
+
+
+\section{Materials and Methods}
+\label{sec:methods}
+
+This section describes the construction of the nucleotide propensity-scale collection, the sequence-to-profile transformation pipeline implemented in PyScale, and the Lyapunov-based profile complexity estimator with robustness extensions. The objective is to specify each component in a reproducible manner, including inputs, key parameters, and output conventions.
+
+\subsection{Scale collection and curation}
+\label{subsec:scale_collection}
+
+\subsubsection{Acquisition strategy and verification}
+Nucleotide propensity scales were assembled from peer-reviewed sources spanning nucleic-acid biophysics, thermodynamics, structural bioinformatics, and related applications. The collection process followed a two-stage strategy. First, scales were extracted from influential review, methods, and foundational papers. Second, targeted database searches were performed using combinations of keywords describing nucleic-acid properties and their numerical parameterization (e.g., dinucleotide stacking, base-pair stability, bendability, curvature, flexibility, solvation, and electronic descriptors), followed by citation tracking. Each candidate scale was checked against its primary source to confirm mapping values, units where applicable, and the stated experimental or computational context. When a source reported multiple variants (e.g., condition-specific parameterizations), variants were stored as distinct scales with separate identifiers and references.
+
+\subsubsection{Scale types}
+Each scale defines a mapping from a nucleotide unit to a real-valued score. Mononucleotide scales assign values to individual bases $\{A,C,G,T\}$ (and $U$ for RNA when provided). On the other hand, dinucleotide scales assign values to ordered adjacent pairs from $\{A,C,G,T\}^2$. Trinucleotide scales assign values to ordered triplets from $\{A,C,G,T\}^3$, often reflecting codon-level or local-context tendencies.
+
+The current release contains 267 scales: 243 mononucleotide, 46 dinucleotide, and 17 trinucleotide scales. Scales are stored in a structured, machine-readable format with a unique identifier, scale type, value map, and source metadata to support traceability.
+
+\begin{table}[t]
+\centering
+\caption{Nucleotide propensity scale collection.}
+\label{tab:scales}
+\begin{tabular}{lr}
+\hline
+Scale type & Count \\
+\hline
+Mononucleotide & 243 \\
+Dinucleotide & 46 \\
+Trinucleotide & 17 \\
+\hline
+Total & 267 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{RNA handling and strand complement conventions}
+When RNA sequences are provided, uracil ($U$) is supported as an explicit nucleotide symbol. If a scale source provides values for $U$, PyScale uses those values directly; otherwise, a configurable equivalence rule (treating $U$ as $T$) can be applied, and this choice is recorded in the output metadata. Complementary strand conversion follows the standard mapping $A \leftrightarrow T$ and $C \leftrightarrow G$ (with $U$ handling consistent with the configured mode).
+
+\subsubsection{Scale categories and documentation}
+For interpretability and optional filtering, scales are grouped into broad categories such as physicochemical, thermodynamic, structural, electronic, and stacking or nearest-neighbor interaction measures. Category labels are used for documentation and presentation and do not alter the numerical application of any scale.
+
+\subsection{Input sequences and preprocessing}
+\label{subsec:input_preprocessing}
+
+\subsubsection{Input format and parsing}
+PyScale accepts nucleotide sequences in FASTA format. Sequences may be DNA or RNA, and nucleotide symbols are handled case-insensitively. Each FASTA record is treated as an independent sequence and processed deterministically given a fixed set of options. For multi-record FASTA files, PyScale processes each record sequentially and generates separate outputs per sequence and per selected scale mode.
+
+\subsubsection{Ambiguity codes and invalid symbols}
+Many sequences contain IUPAC ambiguity codes (e.g., N, R, Y). Because ambiguity handling can affect the resulting numeric profile, PyScale adopts conservative behavior by default. In the default configuration, ambiguous or invalid symbols are not assigned scale values, and the software either rejects the affected record with a diagnostic message or applies a user-selected strategy if configured. The chosen behavior is recorded in the output metadata. Unless otherwise stated, experiments reported in this work use sequences restricted to unambiguous bases.
+
+\subsubsection{Orientation and strand operations}
+PyScale supports two deterministic transformations that can be applied prior to profiling:
+\begin{enumerate}
+  \item Reverse reading (flip-read): $S(i) \mapsto S(N-i+1)$, enabling analysis under opposite orientation.
+  \item Complementary strand conversion: $A\leftrightarrow T$, $C\leftrightarrow G$, enabling strand-symmetric analyses and complement-based comparisons.
+\end{enumerate}
+These operations can be enabled independently or jointly and are implemented consistently across both interfaces.
+
+\subsection{Sequence-to-profile transformation}
+\label{subsec:profile_generation}
+
+\subsubsection{Propensity mapping}
+Let $S$ be a nucleotide sequence of length $N$. Given a propensity scale $\phi$, PyScale maps $S$ to a raw numeric series $P$. For mononucleotide scales,
+\begin{equation}
+P(i) = \phi\big(S(i)\big), \qquad i = 1,\dots,N.
+\end{equation}
+For dinucleotide scales, the series is defined over adjacent pairs,
+\begin{equation}
+P(i) = \phi\big(S(i)S(i+1)\big), \qquad i = 1,\dots,N-1,
+\end{equation}
+and similarly for trinucleotide scales (length $N-2$). In all cases, the resulting series is treated as a one-dimensional profile indexed by position.
+
+\subsubsection{Window averaging and multi-resolution profiles}
+To reduce sensitivity to single-position fluctuations, Pyscale uses moving-window averaging. For an odd window size $w$, the smoothed profile $\widetilde{P}_w$ is defined as
+\begin{equation}
+\widetilde{P}_w(i) = \frac{1}{w}\sum_{j=i-(w-1)/2}^{i+(w-1)/2} P(j).
+\label{eq:window_avg}
+\end{equation}
+PyScale can compute multi-resolution profiles across a sequence of window sizes
+\begin{equation}
+w,\, w-\Delta,\, w-2\Delta,\,\dots,\, w_{\min},
+\end{equation}
+where $\Delta$ is an even step size and $w_{\min}\ge 3$. When enabled, PyScale additionally produces a composite profile by averaging across the smoothed profiles:
+\begin{equation}
+\widetilde{P}_{\mathrm{avg}}(i) = \frac{1}{|\mathcal{W}|}\sum_{w \in \mathcal{W}} \widetilde{P}_w(i),
+\end{equation}
+where $\mathcal{W}$ denotes the set of window sizes evaluated.
+
+\subsubsection{Boundary handling and periodicity assumption}
+Window averaging requires a boundary convention. PyScale supports both periodic and aperiodic boundary conditions. For the periodic mode, indices outside the valid range are wrapped (circular boundary conditions) to ensure periodicity. This option is useful for analyzing repeat structure and avoids edge truncation effects. For many realistic situations, though, the aperiodic mode is more prominent. Here, the averaging window is truncated at sequence ends so that only valid indices contribute. This produces shorter effective windows near boundaries while keeping the averaging rule deterministic. The selected boundary mode is recorded in the output metadata.
+
+\subsubsection{Summary of supported profiling paradigms}
+PyScale supports four primary profiling paradigms that can be combined as needed:
+\begin{itemize}
+  \item window averaging with variable step sizes (multi-window profiling)
+  \item periodicity assumption (circular boundary mode)
+  \item reverse reading (sequence reversal)
+  \item complementary strand conversion.
+\end{itemize}
+All selected options are recorded in output headers to support exact reproduction.
+
+\subsection{Software implementation and interfaces}
+\label{subsec:implementation}
+
+\subsubsection{Implementation and dependencies}
+PyScale is implemented within the Python 3 environment and uses \texttt{numpy} for numerical computation. Plotting is supported through \texttt{matplotlib}, and the graphical interface uses \texttt{tkinter}. The software is operating-system independent and has been tested on Windows, macOS, and Linux. Implementation details (library versions and platform information) are reported alongside performance results.
+
+\subsubsection{Command-line and graphical interfaces}
+PyScale provides two complementary interfaces:
+\begin{enumerate}
+  \item \texttt{PyScaleTERM.py} for batch processing and high-throughput profile generation.
+  \item \texttt{PyScaleGUI.py} for interactive exploration, plotting, and profile comparison, including export of generated outputs.
+\end{enumerate}
+Both interfaces expose the same profiling options (Section~\ref{subsec:profile_generation}). The command-line interface supports automation for large datasets, while the GUI supports interactive parameter exploration.
+
+\subsubsection{Output files and metadata}
+For each input sequence and selected scale mode, PyScale writes a tabular text output file containing position indices and profile values. Each file begins with a header recording: the sequence identifier, scale identifier(s), scale type, window parameters, transformation settings (periodicity, reverse read, complement), and file generation metadata. When Lyapunov estimation is enabled, the header additionally includes the Lyapunov estimate and its configuration (Section~\ref{subsec:lyapunov_methods}). This design supports auditability, reproducibility, and downstream analysis using third-party tools.
+
+\subsection{Lyapunov-based profile complexity estimation}
+\label{subsec:lyapunov_methods}
+
+\subsubsection{Rationale and interpretation}
+PyScale optionally estimates the largest Lyapunov exponent from a time delayed one-dimensional profile. In classical dynamical systems, a positive Lyapunov exponent indicates chaos; the larger the value, the more chaotic the attractor is. A Lyapunov exponent close to \enquote{0} indicates a limit cycle. 
+
+Here, the analyzed time series is a sequence-derived numerical profile rather than a measured physical trajectory. Accordingly, the estimate is interpreted as a comparative divergence or irregularity index of the profile under a chosen scale and profiling configuration, rather than as definitive evidence of biological chaos. The estimator follows a Rosenstein-style workflow for discrete series \citep{Rosenstein1993} and includes practical mechanisms to improve robustness and reduce dependence on user-selected fit intervals.
+
+\subsubsection{Delay-coordinate embedding}
+Given a scalar profile $P(i)$ of length $N$, delay-coordinate embedding is constructed using embedding dimension $m$ and delay $\tau$:
+\begin{equation}
+\mathbf{x}(i) = \big[P(i),\, P(i+\tau),\, \dots,\, P(i+(m-1)\tau)\big],
+\label{eq:embedding}
+\end{equation}
+for $i = 1,\dots,M$, where
+\begin{equation}
+M = N - (m-1)\tau - k_{\max},
+\end{equation}
+and $k_{\max}$ is the maximum forward step used in divergence tracking. Euclidean distance is used in the embedded space. For most practical purposes, a small finite value of $\tau = 1$ or $2$ is sufficient for the purpose.
+
+\subsubsection{Neighbor selection with Theiler exclusion and optional distance cutoff}
+For each reference point $\mathbf{x}(i)$, PyScale selects a neighborhood $\mathcal{N}_K(i)$ of up to $K$ nearest neighbors under Euclidean distance, excluding indices within a Theiler window $W$:
+\begin{equation}
+|i-j| > W.
+\label{eq:theiler}
+\end{equation}
+By default, $W=m\tau$, though users may override this value. An optional distance cutoff $\varepsilon$ can be applied to exclude neighbors beyond $\varepsilon$ in the embedded space. If too few valid neighbors exist for a given $i$, that index is excluded from the averaging set $\mathcal{I}$ used below.
+
+\subsubsection{Mean log-divergence curve with K-nearest-neighbor averaging}
+Let $\mathcal{I}$ denote the set of reference indices for which valid neighbors exist and forward evolution is defined. For each forward step $k \in \{0,\dots,k_{\max}\}$, PyScale computes an average divergence for each reference index:
+\begin{equation}
+\bar{d}(i,k) = \frac{1}{|\mathcal{N}_K(i)|}\sum_{j \in \mathcal{N}_K(i)} \left\lVert \mathbf{x}(i+k) - \mathbf{x}(j+k) \right\rVert,
+\label{eq:davg}
+\end{equation}
+and constructs the mean log-divergence curve
+\begin{equation}
+S(k) = \frac{1}{|\mathcal{I}|}\sum_{i \in \mathcal{I}} \log\!\Big(\max\big(\bar{d}(i,k),\epsilon\big)\Big),
+\label{eq:Sk}
+\end{equation}
+where $\epsilon$ is a small constant used to prevent numerical instability when distances are extremely small.
+
+\subsubsection{Slope estimation and fit-region selection}
+The Lyapunov estimate $\hat{\lambda}$ is obtained by fitting a line to $S(k)$ over an interval $k \in [k_1,k_2]$:
+\begin{equation}
+S(k) \approx \hat{\lambda}k + b.
+\label{eq:linear_fit}
+\end{equation}
+PyScale supports two modes:
+\begin{enumerate}
+  \item Manual fit: the user specifies $k_1$ (lower limit) and $k_2$ (upper limit).
+  \item Automatic fit: PyScale scans candidate intervals and selects an interval that satisfies explicit criteria, including a regressed positive slope, a minimum segment length, and a minimum coefficient of determination $R^2$. Among candidates satisfying the criteria, the algorithm preferentially selects the longest interval and records the selected range and $R^2$ in the output metadata.
+\end{enumerate}
+If no interval satisfies the criteria, or if the profile is too short to support reliable embedding and divergence tracking, PyScale reports the estimate as \texttt{unavailable}. This conservative behavior avoids forcing an estimate when the divergence curve does not support a credible linear regime.
+
+\subsubsection{Reporting and reproducibility}
+When Lyapunov estimation is enabled, each output header of PyScale records the estimated $\hat{\lambda}$, the method identifier, embedding parameters $(m,\tau)$, neighborhood parameters $(K,W,\varepsilon)$, divergence horizon $k_{\max}$, the selected fit interval, and the associated $R^2$ value. These fields allow exact reproduction of reported estimates and support systematic sensitivity analyses. The complete estimation procedure is illustrated in Figure~\ref{fig:algorithm}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.78\linewidth]{paper_figures/fig5_algorithm_flowchart}
+  \caption{Lyapunov estimation workflow. The procedure combines delay embedding, K-nearest-neighbor search with Theiler exclusion, divergence tracking, and fit-region selection (manual or automatic).}
+  \label{fig:algorithm}
+\end{figure}
+
+\section{Algorithmic Setup and Evaluation Protocol}
+\label{sec:experiments}
+
+This section defines the benchmark signals, estimator configurations, evaluation metrics, and sensitivity analyses used to validate the Lyapunov-based profile complexity estimator implemented in PyScale. The evaluation addresses four scenarios: (i) the estimator recovering known theoretical values on a standard chaotic system, (ii) the estimator avoids producing misleading estimates on non-chaotic signals, (iii) K-nearest-neighbor averaging and automatic fit selection improve stability and reproducibility, and (iv) the estimator sensitivity to key hyperparameters and series length.
+
+\subsection{Benchmark signals}
+\label{subsec:benchmarks}
+
+\subsubsection{Chaotic logistic map with known theoretical exponent}
+The primary validation benchmark is the logistic map,
+\begin{equation}
+x_{n+1} = r x_n(1-x_n),
+\label{eq:logistic}
+\end{equation}
+a canonical one-dimensional nonlinear system widely used in Lyapunov estimation studies. We use $r=4.0$, which yields chaotic dynamics on $(0,1)$ and has theoretical largest Lyapunov exponent $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$ under standard assumptions. For each trial, an initial condition $x_0 \in (0,1)$ is selected, the system is iterated for a burn-in period of $N_{\mathrm{burn}}=200$ steps to reduce transient effects, and the subsequent segment of length $N=2800$ is used for estimation. This benchmark provides ground truth for quantitative error analysis.
+
+\subsubsection{Periodic logistic map (non-chaotic)}
+To test behavior on non-chaotic dynamics within the same family, we use the logistic map with $r=3.2$, which exhibits stable periodic dynamics. In this regime the mean log-divergence curve is not expected to contain a sustained linear growth region consistent with exponential divergence. In automatic fit mode, the desired behavior is therefore to return \texttt{unavailable} when no interval satisfies the acceptance criteria.
+
+\subsubsection{Deterministic sine wave (periodic reference)}
+As a second non-chaotic reference, we use a deterministic sinusoid,
+\begin{equation}
+x_n = \sin(2\pi f n + \phi),
+\label{eq:sine}
+\end{equation}
+with fixed frequency $f$ and phase $\phi$. Sine waves are periodic and are not expected to yield a positive Lyapunov exponent under the adopted criteria. This signal provides a simple check that the automatic fit procedure does not report spurious positive slopes.
+
+\subsubsection{Series length and sampling}
+Unless otherwise noted, all benchmark series are generated at lengths sufficient to support embedding and divergence tracking under the default configuration. When investigating length sensitivity (Section~\ref{subsec:sensitivity}), series are truncated to specified lengths prior to estimation. For comparability, the same generation procedure and preprocessing steps are used across estimator configurations, and all reported statistics are computed on identically generated signals.
+
+\subsection{Estimator configurations and controlled comparisons}
+\label{subsec:configs}
+
+To isolate the effect of robustness extensions, we evaluate three estimator configurations that differ only in neighbor aggregation and fit-region selection:
+\begin{enumerate}
+  \item Classic Rosenstein baseline (single neighbor): divergence is tracked using a single nearest neighbor per embedded point ($K=1$).
+  \item KNN averaging with manual fit: divergence is averaged across the $K$ nearest neighbors (default $K=15$), and the fit interval $[k_1,k_2]$ is specified manually.
+  \item KNN averaging with automatic fit: divergence is averaged across the $K$ nearest neighbors (default $K=15$), and the fit interval is selected automatically using the criteria described in Section~\ref{subsec:autofit}.
+\end{enumerate}
+Unless otherwise stated, embedding parameters are fixed at $m=2$ and $\tau=1$, the divergence horizon is $k_{\max}=30$, and the Theiler exclusion window is $W=m\tau$. These defaults are used throughout unless a specific sensitivity analysis is being performed.
+
+\subsection{Evaluation metrics}
+\label{subsec:metrics}
+
+\subsubsection{Accuracy on the chaotic benchmark}
+For the chaotic logistic map ($r=4.0$), accuracy is quantified by absolute and relative error against $\lambda_{\mathrm{theory}}=\ln(2)$:
+\begin{equation}
+\mathrm{AbsError} = \left|\hat{\lambda} - \lambda_{\mathrm{theory}}\right|,
+\qquad
+\mathrm{RelError} = \frac{\left|\hat{\lambda} - \lambda_{\mathrm{theory}}\right|}{\lambda_{\mathrm{theory}}}.
+\end{equation}
+We additionally report the fit-region $R^2$ to summarize the linearity of the selected segment of the mean log-divergence curve.
+
+\subsubsection{Conservative behavior on non-chaotic signals}
+For the periodic logistic map ($r=3.2$) and sine wave benchmarks, the primary evaluation criterion is conservative behavior: the estimator should not report a positive exponent when no credible linear divergence region exists. In automatic fit mode, this is assessed by whether the method returns \texttt{unavailable} due to absence of any candidate interval meeting the acceptance criteria. In manual fit mode, we report the resulting slope and the corresponding $R^2$ to characterize deviations from linear growth.
+
+\subsubsection{Fit quality}
+Fit quality is quantified using the coefficient of determination:
+\begin{equation}
+R^2 = 1 - \frac{\sum_{k \in [k_1,k_2]} \left(S(k) - \widehat{S}(k)\right)^2}{\sum_{k \in [k_1,k_2]} \left(S(k) - \overline{S}\right)^2},
+\end{equation}
+where $\widehat{S}(k)$ denotes the fitted value and $\overline{S}$ is the mean of $S(k)$ over the fitted segment. In automatic fit mode, $R^2$ is both a reported statistic and an acceptance threshold.
+
+\subsubsection{Stability across repeated trials}
+Stability is assessed through repeated trials with different initial conditions $x_0$ for the logistic map. For each configuration, we report the mean and standard deviation:
+\begin{equation}
+\mu_{\lambda} = \frac{1}{T}\sum_{t=1}^{T}\hat{\lambda}_t,
+\qquad
+\sigma_{\lambda} = \sqrt{\frac{1}{T-1}\sum_{t=1}^{T}\left(\hat{\lambda}_t - \mu_{\lambda}\right)^2},
+\end{equation}
+where $T$ is the number of trials in our experiments, $T=20$. Robustness improvements from KNN averaging are summarized by comparing dispersion measures (e.g., standard deviation) between the $K=1$ baseline and KNN-averaged configurations.
+
+\subsection{Automatic fit-region selection protocol}
+\label{subsec:autofit}
+
+Automatic fit selection is designed to reduce user dependence in choosing the linear region of the mean log-divergence curve. Given the computed $S(k)$ for $k \in \{0,\dots,k_{\max}\}$, the procedure scans candidate intervals $[a,b]$ that satisfy a minimum segment length constraint. For each interval, a least-squares linear fit is computed and accepted if:
+\begin{enumerate}
+  \item the fitted slope is positive,
+  \item the interval length $(b-a+1)$ meets a minimum length threshold,
+  \item $R^2 \ge R^2_{\min}$, where $R^2_{\min}$ is a user-configurable threshold (default $0.98$).
+\end{enumerate}
+Among accepted candidates, the algorithm selects the longest interval; ties are resolved by preferring larger $R^2$. If no interval satisfies the criteria, the estimator returns \texttt{unavailable}. The selected interval and its $R^2$ are recorded in the output metadata.
+
+\subsection{Sensitivity analyses}
+\label{subsec:sensitivity}
+
+To characterize estimator behavior and motivate recommended defaults, sensitivity analyses are performed on the chaotic logistic map benchmark by varying one factor at a time while holding the remaining parameters fixed:
+\begin{enumerate}
+  \item Embedding dimension ($m$): $m$ is varied (e.g., $m \in \{2,\dots,8\}$) to assess stability under higher-dimensional embeddings.
+  \item Neighbor count ($K$): $K$ is varied (e.g., $K \in \{1,\dots,30\}$) to quantify variance reduction and identify diminishing returns.
+  \item Fit-region controls: manual-fit endpoints are varied to quantify sensitivity to user choice; in automatic mode, $R^2_{\min}$ and the minimum segment length are varied to characterize conservative versus permissive behavior.
+  \item Series length: series are truncated to different lengths to estimate the minimum length required for stable embedding and divergence estimation under the default settings.
+\end{enumerate}
+For each sensitivity condition, we report $\hat{\lambda}$ (and dispersion across trials where applicable), along with the selected fit interval and $R^2$ in automatic mode.
+
+\subsection{Computational environment and runtime measurement}
+\label{subsec:runtime}
+
+All experiments are executed under a fixed software environment described in Section~\ref{subsec:implementation}. Runtime measurements are recorded using wall-clock timing for major operations, including multi-window profile generation and Lyapunov estimation. We report average runtime per profile and summarize peak memory usage when available. These measurements characterize feasibility for both batch processing and interactive use.
+
+
+
+
+
+\section{Results}
+\label{sec:results}
+
+We report validation and robustness results for the Lyapunov-based profile complexity estimator, followed by an example analysis illustrating alignment-free comparison using propensity profiles. Unless stated otherwise, the default estimator settings are $m=2$, $\tau=1$, $k_{\max}=30$, $K=15$, Theiler window $W=m\tau$, and automatic fit selection with $R^2_{\min}=0.98$ and a minimum segment length of 6 points.
+
+\subsection{Validation on the chaotic logistic map}
+\label{subsec:logistic_validation}
+
+We evaluated the estimator on the chaotic logistic map with $r=4.0$, which has theoretical largest Lyapunov exponent $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$. Figure~\ref{fig:log_divergence} shows the mean log-divergence curve $S(k)$ and the fitted interval used to estimate the slope. The curve exhibits a well-defined approximately linear regime over a contiguous range of $k$, consistent with exponential separation within the fitted region.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{paper_figures/fig1_log_divergence_curve}
+  \caption{Lyapunov estimation via the mean log-divergence curve. Mean log-divergence $S(k)$ as a function of step $k$ for the chaotic logistic map ($r=4.0$). The shaded region indicates the selected fit interval used to estimate the slope $\hat{\lambda}$.}
+  \label{fig:log_divergence}
+\end{figure}
+
+To isolate the effect of the robustness extensions, we compared three configurations: (i) a single-neighbor baseline ($K=1$), (ii) K-nearest-neighbor averaging with a manually specified fit interval ($K=15$ manual), and (iii) K-nearest-neighbor averaging with automatic fit-region selection ($K=15$ auto). Table~\ref{tab:logistic_results} summarizes the corresponding estimates and fit quality, and Figure~\ref{fig:method_comparison} provides a visual comparison. Under automatic fit selection, the estimator produced an exponent close to $\ln(2)$ without requiring an analyst-chosen fit interval.
+
+\begin{table}[t]
+\centering
+\caption{Validation on the chaotic logistic map ($r=4.0$). Estimated Lyapunov exponents compared to the theoretical value $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$.}
+\label{tab:logistic_results}
+\begin{tabular}{lccc}
+\hline
+Method & $\hat{\lambda}$ & Relative error & $R^2$ \\
+\hline
+Single neighbor ($K=1$) & 0.693 & 0.1\% & 1.000 \\
+KNN ($K=15$), manual fit & 0.563 & 18.8\% & 0.954 \\
+KNN ($K=15$), auto-fit & 0.638 & 7.9\% & 0.986 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\linewidth]{paper_figures/fig2_method_comparison}
+  \caption{Comparison of Lyapunov estimation configurations. Estimates for the chaotic logistic map ($r=4.0$) using a single-neighbor baseline ($K=1$), KNN averaging with manual fitting, and KNN averaging with automatic fit selection. The dashed line indicates $\ln(2)\approx 0.693$. Error bars summarize variability across repeated trials where applicable.}
+  \label{fig:method_comparison}
+\end{figure}
+
+\subsection{Conservative behavior on non-chaotic benchmarks}
+\label{subsec:nonchaotic}
+
+We next examined whether the automatic procedure avoids reporting a positive exponent when the divergence curve does not support a credible linear growth region. Two non-chaotic reference signals were evaluated: the logistic map in a periodic regime ($r=3.2$) and a deterministic sine wave. Figure~\ref{fig:chaos_discrimination} contrasts the benchmark signals and their divergence behavior. In both cases, the automatic fit routine did not identify any interval meeting the acceptance criteria (positive slope, minimum length, and $R^2$ threshold) and therefore returned \texttt{unavailable}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{paper_figures/fig4_chaos_discrimination}
+  \caption{Discrimination between chaotic and non-chaotic benchmarks. Only the chaotic logistic map ($r=4.0$) exhibits a divergence curve with an admissible linear region under the automatic selection criteria. The periodic logistic map ($r=3.2$) and sine wave do not meet the criteria and are reported as \texttt{unavailable}.}
+  \label{fig:chaos_discrimination}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Behavior of the estimator on non-chaotic benchmark signals under automatic fit selection.}
+\label{tab:nonchaotic_results}
+\begin{tabular}{llll}
+\hline
+Benchmark signal & Regime & Output & Reason \\
+\hline
+Logistic map ($r=3.2$) & Periodic & \texttt{unavailable} & No linear region ($R^2 < 0.98$) \\
+Sine wave & Deterministic & \texttt{unavailable} & No linear region ($R^2 < 0.98$) \\
+Logistic map ($r=4.0$) & Chaotic & $\hat{\lambda}=0.638$ & Linear region found \\
+\hline
+\end{tabular}
+\vspace{0.3em}
+
+
+\footnotesize \texttt{unavailable} indicates that no candidate fit interval satisfied the acceptance criteria (positive slope, minimum segment length, and $R^2 \ge R^2_{\min}$).
+\end{table}
+
+\subsection{Stability and robustness of KNN averaging}
+\label{subsec:stability}
+
+To assess stability, we repeated estimation across multiple trials with different initial conditions for the chaotic logistic map. KNN averaging produced a tighter distribution relative to the single-neighbor baseline, consistent with reduced sensitivity to any single neighbor choice. In these experiments, KNN averaging reduced the standard deviation of estimates by approximately 50\% compared to $K=1$. We also observed rare edge cases in which the automatic fit procedure returned \texttt{unavailable} or a non-finite value because no interval satisfied the acceptance criteria; this conservative behavior avoids forcing an estimate from weak or inconsistent linear structure.
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\linewidth]{paper_figures/fig3_stability_comparison}
+%   \caption{Stability comparison for $K=1$ versus KNN averaging. Distribution of Lyapunov estimates across repeated trials for the chaotic logistic map ($r=4.0$). KNN averaging ($K=15$) reduces trial-to-trial variability relative to the single-neighbor baseline.}
+%   \label{fig:stability}
+% \end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Stability comparison across repeated trials on the chaotic logistic map ($r=4.0$).}
+\label{tab:stability}
+\begin{tabular}{lccc}
+\hline
+Configuration & Mean $\hat{\lambda}$ & Std.\ dev. & Relative reduction \\
+\hline
+Single neighbor ($K=1$) & 0.693 & 0.0125 & --- \\
+KNN ($K=15$), auto-fit & 0.638 & 0.0062 & 50\% \\
+\hline
+\end{tabular}
+\vspace{0.3em}
+
+\footnotesize Theoretical value for $r=4.0$: $\lambda_{\mathrm{theory}}=\ln(2)\approx 0.693$.
+\end{table}
+
+\subsection{Sensitivity analysis and recommended operating ranges}
+\label{subsec:sensitivity_results}
+
+We performed sensitivity analyses over embedding dimension $m$, neighbor count $K$, fit controls, and series length. Figure~\ref{fig:param_sensitivity} summarizes the resulting trends on the chaotic logistic map benchmark. Estimates were generally stable for modest embedding dimensions (approximately $m \le 5$) and for neighbor counts above a small minimum (approximately $K \ge 10$). In contrast, fit controls and series length exerted a more pronounced influence. Short series increased variability and more frequently failed the automatic criteria, consistent with insufficient data to support stable embedding and divergence tracking.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{paper_figures/fig7_parameter_sensitivity}
+  \caption{Sensitivity analysis for Lyapunov estimation. Effect of embedding dimension $m$, neighbor count $K$, fit controls, and series length on the estimated exponent for the chaotic logistic map ($r=4.0$).}
+  \label{fig:param_sensitivity}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Recommended parameter ranges based on the sensitivity analysis on the chaotic logistic map ($r=4.0$).}
+\label{tab:parameters}
+\begin{tabular}{llll}
+\hline
+Parameter & Symbol & Default & Suggested stable range \\
+\hline
+Embedding dimension & $m$ & 2 & $2 \le m \le 5$ \\
+Time delay & $\tau$ & 1 & $\tau = 1$ \\
+Neighbor count & $K$ & 15 & $K \ge 10$ \\
+Theiler window & $W$ & $m\tau$ & $W=m\tau$ \\
+Divergence horizon & $k_{\max}$ & 30 & 20--50 \\
+Minimum fit length & --- & 6 & $\ge 6$ \\
+Auto-fit threshold & $R^2_{\min}$ & 0.98 & 0.95--0.99 \\
+Minimum series length & $N$ & --- & $\ge 1500$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Biological case study: Human promoter analysis}
+\label{subsec:biological_case_study}
+
+To demonstrate PyScale on biologically relevant sequences, we analyzed human promoter regions from two functionally distinct classes: genes with canonical TATA boxes and housekeeping genes whose promoters are embedded in CpG islands and typically lack TATA elements. Promoter sequences were obtained from EPDnew, the Eukaryotic Promoter Database \citep{Meylan2020EPD}, selecting the Human collection (Homo sapiens, GRCh38/hg38 assembly).
+
+\subsubsection{Promoter selection and data extraction}
+We selected ten promoters representing two classes:
+\begin{itemize}
+  \item \textbf{TATA-box promoters} (5 sequences): HBB (hemoglobin subunit beta), TBP (TATA-box binding protein), MYC (MYC proto-oncogene), FOS (Fos proto-oncogene), and PCNA (proliferating cell nuclear antigen).
+  \item \textbf{CpG island promoters} (5 sequences): GAPDH (glyceraldehyde-3-phosphate dehydrogenase), ACTB (actin beta), EEF1A1 (eukaryotic translation elongation factor 1 alpha 1), RPS6 (ribosomal protein S6), and UBB (ubiquitin B).
+\end{itemize}
+For each promoter, the region spanning $-500$ to $+100$ bp relative to the annotated transcription start site (TSS) was extracted, yielding 600 bp sequences suitable for profile analysis. TSS positions and strand orientations were verified against EPDnew annotations.
+
+\subsubsection{GC content and sequence composition}
+Consistent with the expected properties of these promoter classes, CpG island promoters exhibited higher GC content than TATA-box promoters. The mean GC content was 54.5\% (range: 42.5--65.2\%) for TATA-box promoters and 60.1\% (range: 53.5--69.8\%) for CpG island promoters. This difference reflects the compositional bias associated with CpG island embedding.
+
+\subsubsection{Propensity profile analysis and Lyapunov estimation}
+Each promoter sequence was converted to a propensity profile using multiple scales (twist, GC content, and purine/pyrimidine) and analyzed using the Lyapunov estimator with the default configuration ($m=2$, $\tau=1$, $K=15$, automatic fit selection with $R^2_{\min}=0.98$). Table~\ref{tab:promoter_results} summarizes the Lyapunov estimates and GC content for each promoter.
+
+\begin{table}[H]
+\centering
+\caption{Lyapunov exponent estimates and GC content for human promoter sequences.}
+\label{tab:promoter_results}
+\begin{tabular}{llccc}
+\hline
+Promoter & Class & GC (\%) & LLE (twist) & LLE (GC scale) \\
+\hline
+HBB\_1 & TATA & 45.3 & 0.062 & 0.063 \\
+TBP\_2 & TATA & 42.5 & 0.012 & 0.009 \\
+MYC\_1 & TATA & 61.0 & 0.017 & 0.017 \\
+FOS\_1 & TATA & 65.2 & 0.027 & 0.030 \\
+PCNA\_1 & TATA & 58.5 & 0.015 & 0.023 \\
+\hline
+GAPDH\_1 & CpG & 63.3 & 0.029 & 0.024 \\
+ACTB\_1 & CpG & 69.8 & 0.039 & 0.042 \\
+EEF1A1\_2 & CpG & 53.5 & 0.025 & 0.027 \\
+RPS6\_1 & CpG & 56.8 & N/A & 0.043 \\
+UBB\_2 & CpG & 57.2 & 0.038 & 0.036 \\
+\hline
+\end{tabular}
+\vspace{0.3em}
+
+\footnotesize LLE: largest Lyapunov exponent estimate. N/A indicates no valid linear region was detected under the automatic fit criteria.
+\end{table}
+
+\subsubsection{Comparison between promoter classes}
+Aggregating across promoters, CpG island promoters exhibited slightly higher mean Lyapunov estimates than TATA-box promoters under the twist scale (0.033 vs.\ 0.027) and GC content scale (0.034 vs.\ 0.028). Additionally, CpG island promoters showed lower variability in their estimates (standard deviation 0.006--0.008) compared to TATA-box promoters (standard deviation 0.018), suggesting more consistent profile structure within this class. These observations are consistent with the interpretation that CpG island promoters, with their higher and more uniform GC content, produce profiles with characteristic divergence structure that differs systematically from TATA-box promoters.
+
+This case study demonstrates that PyScale can be applied to biologically meaningful sequence comparisons and that the Lyapunov-based complexity index captures differences between functionally distinct promoter classes.
+
+\subsection{Summary}
+\label{subsec:summary_findings}
+
+Overall, the estimator recovers the expected theoretical exponent on a standard chaotic benchmark, behaves conservatively on non-chaotic references by returning \texttt{unavailable} when no admissible linear regime is present, and becomes more stable under KNN averaging. Sensitivity analyses clarify parameter regimes that yield reliable estimates and support the recommended default settings used by PyScale.
+
+
+
+
+
+
+\section{Discussion}
+\label{sec:discussion}
+
+PyScale was developed to support nucleotide propensity-scale profiling in a form that is accessible, reproducible, and straightforward to integrate into downstream analysis. The toolkit addresses two needs that are often treated separately: a unified approach for converting nucleotide sequences into interpretable, position-resolved property profiles under common analytical paradigms, and a quantitative, reproducible measure of profile structure that complements visual inspection and simple similarity metrics. The results support three conclusions. First, propensity profiles provide an alignment-free representation that can be compared directly across sequences while retaining interpretability at the level of the underlying property scale. Second, the Lyapunov estimator behaves appropriately on standard dynamical benchmarks by recovering a known theoretical value in a chaotic regime and by rejecting non-chaotic signals under conservative criteria. Third, the robustness extensions implemented in PyScale improve stability and reduce dependence on analyst-selected fit intervals.
+
+\subsection{Propensity profiles as an interpretable alignment-free representation}
+A limitation of purely alignment-based analysis is that similarity is expressed primarily through residue correspondence and match scores, which may not reflect property-level similarities that are distributed across a region. Propensity-scale profiling provides a complementary view by mapping a sequence to a position-resolved numerical profile, enabling both local inspection and summary comparison. In the example analysis, three sequences exhibited similar profile structure while a fourth displayed a distinct pattern, and a correlation-based similarity matrix provided a quantitative summary consistent with visual inspection. This illustrates how profile-level similarity can support screening, clustering, and exploratory analysis without requiring an alignment. The representation remains interpretable because each profile is anchored to a defined physicochemical, thermodynamic, or structural scale.
+
+Transformations such as reverse reading and complementary strand conversion further extend the usefulness of this representation. These options support analyses where orientation or strand context is relevant, and the periodicity assumption provides a controlled way to study repeat structure and boundary behavior under window averaging. Together, these features enable systematic exploration of property-level organization in nucleotide sequences using a consistent computational pipeline.
+
+\subsection{Interpretation of Lyapunov estimates for sequence-derived profiles}
+In nonlinear dynamics, a positive largest Lyapunov exponent is commonly associated with sensitive dependence on initial conditions. In PyScale, the estimator is applied to a numerical profile derived from a static nucleotide sequence under a specified mapping and smoothing configuration. The resulting estimate should therefore be interpreted as a comparative index of divergence structure or irregularity in the profile, rather than as a direct claim that an underlying biological process is chaotic. This interpretation is consistent with the intended use of the estimator as a quantitative descriptor for comparing profiles across sequences, scales, and profiling settings.
+
+A key design choice is conservative reporting when the evidence for exponential divergence is not present. For the periodic logistic map and deterministic sine wave benchmarks, the automatic procedure returned \texttt{unavailable} because no candidate fit interval satisfied the acceptance criteria. This behavior is important in applied settings because it avoids reporting values that would be driven primarily by fit artifacts or short-range fluctuations. The metadata recorded alongside each estimate, including the selected fit interval and its $R^2$, provides additional context and supports auditability of reported values.
+
+\subsection{Why KNN averaging and automatic fit selection improve reproducibility}
+Lyapunov estimation from finite data can be sensitive to both neighbor selection and fit-region choice. Single-neighbor divergence tracking can amplify sensitivity to outlier neighbor relationships, and manual selection of a fitting interval can introduce user-to-user variability. PyScale addresses these issues through two practical extensions. K-nearest-neighbor averaging stabilizes the divergence curve by aggregating across multiple neighbors in embedded space, reducing dependence on any single neighbor choice. Automatic fit-region selection replaces a subjective manual choice with an explicit, reproducible procedure based on slope positivity, minimum segment length, and an $R^2$ threshold. Together, these features support consistent behavior in batch workflows and make estimates easier to compare across datasets and parameter settings.
+
+The estimator may return \texttt{unavailable} in rare cases even for chaotic benchmarks when no interval satisfies the criteria under the configured thresholds. In such cases, \texttt{unavailable} should be treated as a conservative outcome indicating that a credible linear regime was not detected under the current settings. This behavior is preferable to forcing an estimate in the absence of supporting structure.
+
+\subsection{Computational considerations}
+The robustness extensions introduce additional computational cost relative to a single-neighbor estimator with a fixed fit interval. KNN search in embedded space and scanning candidate fit intervals can dominate runtime when Lyapunov estimation is applied to large collections of profiles. In practice, this cost can be managed by applying Lyapunov estimation selectively to profiles of interest and by using parameter ranges supported by the sensitivity analysis. Implementation-level optimizations, including more vectorized distance computations, caching of embedded representations, and optional parallel execution, are natural next steps for improving throughput in large batch analyses.
+
+\subsection{Limitations and future directions}
+Several limitations follow from the current design. Scale selection is user-driven and may be nontrivial for task-specific applications. Window averaging and the periodicity assumption influence profile shape and can affect downstream measures, including the Lyapunov-based index, which motivates explicit reporting of parameters and metadata. Lyapunov estimation also depends on embedding and fit parameters; PyScale provides conservative defaults and exposes key parameters for transparency, but does not currently implement automated selection of embedding parameters. Finally, although the example analysis demonstrates alignment-free comparison through profiles and correlation, additional application-driven benchmarks are needed to assess performance relative to standard alignment-free baselines in predictive tasks.
+
+Future development can address these points by adding automated scale recommendation and feature ranking for specific tasks, providing optional embedding-parameter heuristics, and expanding biological case studies and predictive benchmarks. Improvements in computational performance, including optimized neighbor search and parallel execution, would further support large-scale use.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This work presents PyScale, a reproducible toolkit for nucleotide propensity-scale profiling and profile-based comparative analysis. PyScale addresses a practical gap in nucleotide sequence analysis by combining a curated collection of nucleotide propensity scales with software that converts DNA or RNA sequences into interpretable, position-resolved numerical profiles under common analysis paradigms. The toolkit supports window averaging with variable step sizes, periodicity assumptions, reverse reading, and complementary strand conversion, enabling both exploratory analysis and high-throughput batch processing.
+
+A central contribution is an integrated largest Lyapunov exponent estimator for sequence-derived profiles, designed to quantify profile-level divergence or irregularity in a reproducible manner. The estimator follows a Rosenstein-style workflow for discrete series and incorporates K-nearest-neighbor averaging and automatic fit-region selection to improve stability and reduce dependence on analyst-selected fit intervals. Validation on standard benchmarks demonstrates recovery of the expected theoretical exponent for a chaotic logistic map regime, while the method behaves conservatively on non-chaotic signals by returning \texttt{unavailable} when a credible linear regime is not detected. Together with the example propensity-profile comparison, these results support PyScale as a foundation for alignment-free nucleotide sequence characterization using interpretable property profiles and reproducible profile-complexity estimation.
+
+\section*{Availability and Implementation}
+\label{sec:availability}
+
+PyScale is implemented in Python 3 and is distributed as open-source software at \url{https://github.com/flowerdrf/PyScale}
+ under the \texttt{MIT} license. The toolkit includes a command-line interface (\texttt{PyScaleTERM.py}) for batch processing and a graphical interface (\texttt{PyScaleGUI.py}) for interactive visualization and comparison. Core dependencies are \texttt{numpy} and \texttt{matplotlib}, and the GUI additionally requires \texttt{tkinter}. Documentation, example input files, and scripts required to reproduce the figures reported in this manuscript are provided in the repository.
+
+
+\appendix
+
+\section{Example sequence profiling and alignment-free comparison}
+\label{app:sequence_example}
+
+This appendix demonstrates alignment-free sequence comparison using propensity profiles produced by PyScale. Figure~\ref{fig:profiles} shows window-averaged profiles for four nucleotide sequences generated under a shared configuration, together with a correlation-based similarity matrix computed from the resulting profiles. Three sequences exhibit closely matched profile structure, whereas the fourth shows a distinct pattern. The correlation matrix provides a quantitative summary consistent with visual inspection and can support screening, clustering, or downstream feature construction without requiring sequence alignment.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{paper_figures/fig6a_propensity_profiles}
+  \vspace{0.3cm}
+  \includegraphics[width=0.70\linewidth]{paper_figures/fig6b_correlation_matrix}
+  \caption{Example propensity profiles and alignment-free similarity. (Top) Window-averaged propensity profiles for four sequences. (Bottom) Pairwise correlation matrix computed from the profiles, summarizing similarity without alignment.}
+  \label{fig:profiles}
+\end{figure}
+
+\bibliographystyle{plainnat}
+\bibliography{ref}
+\end{document}
